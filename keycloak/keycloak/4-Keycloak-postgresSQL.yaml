@@ -58,9 +58,9 @@ metadata:
   name: keycloak-db-secret
   namespace: demo-project
 type: Opaque
-data:
-  password: YXZlcnlzZWN1cmVwYXNzd29yZA==
-  username: a2V5Y2xvYWs=
+stringData:
+  password: kc-thegp7tm4k
+  username: keycloak
 ---
 apiVersion: v1
 kind: Service
