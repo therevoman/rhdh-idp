@@ -60,10 +60,15 @@ spec:
         - -c
         - -x
         - |
-          echo "Configuring HostedCluster for oauth"
-          echo "Setting configuration ${configuration}"
-          echo "${configuration}"
+          echo "Configuring backstage postgres database to upgrade properly"
+          echo ""
+          echo "wait for pod to become ready"
+          oc wait pod -n demo-project -l rhdh.redhat.com/app=backstage-psql-developer-hub --for=condition=Ready --timeout=300s
+
           echo
+          echo
+
+          echo "pod ready - running commands"
           
           oc rsh oc rsh sts/backstage-psql-developer-hub -n demo-project bash -c '
               psql -U postgres -d backstage_plugin_catalog << "SQL"
@@ -79,6 +84,6 @@ spec:
           echo "Migration fixed"
           echo "Wait a few moments for any change"
       restartPolicy: Never
-      serviceAccount: hostedcluster-patcher
-      serviceAccountName: hostedcluster-patcher
+      serviceAccount: backstage-migration-patcher
+      serviceAccountName: backstage-migration-patcher
   backoffLimit: 2
