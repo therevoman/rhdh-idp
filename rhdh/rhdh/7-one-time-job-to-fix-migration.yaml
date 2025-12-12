@@ -1,0 +1,84 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backstage-migration-patcher
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+rules:
+- apiGroups:
+  - rhdh.redhat.com
+  resources:
+  - backstage
+  verbs:
+  - get
+  - list
+  - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: backstage-migration-patcher
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "-5"
+subjects:
+- kind: ServiceAccount
+  name: backstage-migration-patcher
+  namespace: rhdh-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backstage-migration-patcher
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backstage-migration-patcher
+  namespace: rhdh-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backstage-migration-patcher
+  generateName: backstage-migration-patcher-
+  namespace: rhdh-operator
+  labels:
+    app: backstage-migration-patcher
+spec:
+  template:
+    spec:
+      containers:
+      - name: patcher
+        image: registry.redhat.io/openshift4/ose-cli
+        env:
+        - name: configuration
+          value: 'none'
+        command:
+        - /bin/bash
+        - -c
+        - -x
+        - |
+          echo "Configuring HostedCluster for oauth"
+          echo "Setting configuration ${configuration}"
+          echo "${configuration}"
+          echo
+          
+          oc rsh oc rsh sts/backstage-psql-developer-hub -n demo-project bash -c '
+              psql -U postgres -d backstage_plugin_catalog << "SQL"
+              -c "UPDATE knex_migrations_lock SET is_locked = 0 WHERE is_locked <> 0; " \
+                  -c "UPDATE knex_migrations_lock SET is_locked = 0 WHERE is_locked <> 0; " \
+                  -c "ALTER TABLE entities ADD COLUMN api_version TEXT; " \
+                  -c "ALTER TABLE entities ADD COLUMN kind TEXT; " \
+                  -c "ALTER TABLE entities ADD COLUMN name TEXT; " \
+                  -c "ALTER TABLE entities ADD COLUMN namespace TEXT;" \
+                  '
+
+          psql -U postgres -d backstage_plugin_catalog -c "CREATE INDEX idx_plugin_catalog_entity_kind ON plugin_catalog_entity (kind);"
+          echo "Migration fixed"
+          echo "Wait a few moments for any change"
+      restartPolicy: Never
+      serviceAccount: hostedcluster-patcher
+      serviceAccountName: hostedcluster-patcher
+  backoffLimit: 2

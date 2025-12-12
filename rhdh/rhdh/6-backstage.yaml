@@ -1,5 +1,5 @@
 ---
-apiVersion: rhdh.redhat.com/v1alpha3
+apiVersion: rhdh.redhat.com/v1alpha4
 kind: Backstage
 metadata:
   name: developer-hub
@@ -23,5 +23,5 @@ spec:
     replicas: 1
     route:
       enabled: true
-      host: rhdh.apps.cluster-<GUID>.dynamic.redhatworkshops.io
-      subdomain: apps.cluster-<GUID>.dynamic.redhatworkshops.io
+      host: rhdh.apps.ocs.openshift.works
+      subdomain: apps.ocs.openshift.works
