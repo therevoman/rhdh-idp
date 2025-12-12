@@ -9,6 +9,7 @@ metadata:
   annotations:
     olm.operatorGroup: rhdh-operator
     rhdh.openshift.io/display-name: "Red Hat Developer Hub"
+    argocd.argoproj.io/sync-options: Prune=false,SkipDryRunOnMissingResource=true
 spec:
   channel: fast
   installPlanApproval: Automatic
