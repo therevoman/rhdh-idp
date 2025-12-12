@@ -13,10 +13,18 @@ spec:
     path: rhdh
     repoURL: https://github.com/therevoman/rhdh-idp.git
     targetRevision: phase-1-work
+  ignoreDifferences:
+    - group: operators.coreos.com
+      kind: Subscription
+      jsonPointers:
+        - /status
+        - /spec/installPlanApproval
+        - /spec/startingCSV
   syncPolicy:
     automated:
       selfHeal: false
       prune: false
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
 ...
